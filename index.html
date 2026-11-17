@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>우리만의 턴테이블</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-center: #362254;
+      --bg-mid: #1d1438;
+      --bg-edge: #110c21;
+      --vinyl-base: #161321;
+      --vinyl-highlight: #2b2340;
+      --label-color: #e57a94;
+      --arm-color: #e6dce8;
+      --head-color: #f29bb0;
+      --glow-rgba: rgba(229, 122, 148, 0.22);
+      --modal-bg: rgba(26, 18, 48, 0.88);
+      --modal-border: rgba(255, 205, 220, 0.22);
+      --accent-color: #e57a94;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 50% 38%, var(--bg-center) 0%, var(--bg-mid) 52%, var(--bg-edge) 100%);
+      color: #f4eef8;
+      font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+      transition: background 0.5s ease;
+    }
+
+    /* Ambient Soft Glow behind Turntable */
+    .ambient-halo {
+      background: radial-gradient(circle, var(--glow-rgba) 0%, rgba(157, 107, 224, 0.12) 45%, transparent 72%);
+      filter: blur(28px);
+      pointer-events: none;
+      transition: background 0.5s ease;
+    }
+
+    /* Realistic Vinyl Grooves with Dynamic Base & Highlight Colors */
+    .vinyl-grooves {
+      background:
+        radial-gradient(circle at center,
+          transparent 0%,
+          transparent 31%,
+          rgba(255, 255, 255, 0.05) 31.5%,
+          transparent 32%,
+          rgba(0, 0, 0, 0.55) 36%,
+          rgba(255, 255, 255, 0.03) 42%,
+          rgba(0, 0, 0, 0.6) 48%,
+          rgba(255, 255, 255, 0.04) 55%,
+          rgba(0, 0, 0, 0.55) 62%,
+          rgba(255, 255, 255, 0.035) 69%,
+          rgba(0, 0, 0, 0.65) 76%,
+          rgba(255, 255, 255, 0.04) 84%,
+          rgba(0, 0, 0, 0.85) 95%,
+          #090712 100%
+        ),
+        conic-gradient(
+          from 35deg,
+          var(--vinyl-base) 0deg,
+          var(--vinyl-highlight) 38deg,
+          var(--vinyl-base) 85deg,
+          var(--vinyl-base) 145deg,
+          var(--vinyl-highlight) 215deg,
+          var(--vinyl-base) 275deg,
+          var(--vinyl-base) 360deg
+        );
+      box-shadow:
+        0 24px 60px rgba(6, 4, 16, 0.85),
+        0 0 0 1px rgba(255, 255, 255, 0.07),
+        inset 0 0 18px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Subtle Anisotropic Light Reflection Overlay */
+    .vinyl-sheen {
+      background: conic-gradient(
+        from 15deg,
+        transparent 0deg,
+        rgba(255, 225, 235, 0.1) 28deg,
+        transparent 62deg,
+        transparent 180deg,
+        rgba(196, 168, 255, 0.09) 208deg,
+        transparent 245deg,
+        transparent 360deg
+      );
+      pointer-events: none;
+    }
+
+    /* Center Dynamic Label */
+    .vinyl-label {
+      background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--label-color) 75%, white) 0%, var(--label-color) 58%, color-mix(in srgb, var(--label-color) 70%, black) 100%);
+      box-shadow:
+        inset 0 0 0 2px rgba(255, 235, 240, 0.25),
+        inset 0 2px 8px rgba(255, 255, 255, 0.3),
+        0 2px 10px rgba(0, 0, 0, 0.65);
+    }
+
+    /* Glassmorphic Floating Pill & Reactive Theme Modal */
+    .glass-pill {
+      background: var(--modal-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--modal-border);
+      box-shadow: 0 14px 38px rgba(7, 4, 18, 0.65);
+      transition: background 0.4s ease, border-color 0.4s ease;
+    }
+
+    input[type="text"] {
+      user-select: text;
+    }
+
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch {
+      border: 1.5px solid rgba(255, 255, 255, 0.28);
+      border-radius: 9999px;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.22);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen px-4 py-5 sm:py-7">
+
+  <!-- Hidden YouTube IFrame Container -->
+  <div id="ytPlayerWrapper" class="fixed -left-[9999px] -top-[9999px] w-1 h-1 opacity-0 pointer-events-none">
+    <div id="ytPlayer"></div>
+  </div>
+  <!-- Hidden Local Audio Element -->
+  <audio id="localAudio" crossorigin="anonymous"></audio>
+
+  <!-- Minimal Top Bar: Sync Pill & Corner Theme Customizer Icon -->
+  <header class="w-full max-w-md flex items-center justify-between z-30">
+    <div class="w-8"></div>
+
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.08]">
+      <span id="syncDot" class="w-2 h-2 rounded-full transition-colors duration-500" style="background-color: var(--accent-color);"></span>
+      <span id="syncText" class="text-[11px] tracking-wider text-white/75 font-light">연결 중</span>
+    </div>
+
+    <!-- Subtle Theme/Mood Customizer Trigger Icon -->
+    <button id="themeOpenBtn" type="button" title="색상 및 분위기 설정" class="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] border border-white/[0.1] text-white/80 flex items-center justify-center transition">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+        <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+        <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+        <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+      </svg>
+    </button>
+  </header>
+
+  <!-- Centerpiece: Top-Down Minimalist Vinyl Turntable -->
+  <main class="relative flex items-center justify-center my-auto w-full max-w-[410px] aspect-square">
+    <!-- Soft Evening/Dawn Halo -->
+    <div class="ambient-halo absolute inset-4 rounded-full"></div>
+
+    <!-- Turntable Plinth / Deck Base -->
+    <div id="turntableDeck" class="relative w-[92%] h-[92%] rounded-[42px] bg-black/30 backdrop-blur-md border border-white/[0.1] shadow-[0_30px_80px_rgba(5,3,15,0.85),inset_0_1px_1px_rgba(255,255,255,0.12)] flex items-center justify-center">
+
+      <!-- Subtle Turntable Platter Rim -->
+      <div class="relative w-[82%] h-[82%] -translate-x-[4%] rounded-full bg-[#0c0917] p-[5px] shadow-[inset_0_2px_10px_rgba(0,0,0,0.95),0_1px_0_rgba(255,255,255,0.06)] flex items-center justify-center">
+
+        <!-- Rotating Vinyl Disc -->
+        <div id="vinylDisc" class="relative w-full h-full rounded-full vinyl-grooves flex items-center justify-center will-change-transform">
+          <!-- Center Label -->
+          <div class="vinyl-label relative w-[33%] h-[33%] rounded-full flex items-center justify-center overflow-hidden">
+            <!-- Optional Album Thumbnail on Label -->
+            <img id="labelCover" src="" alt="" class="hidden absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-luminosity" />
+            <!-- Inner Groove Ring -->
+            <div class="w-[74%] h-[74%] rounded-full border border-white/25 flex items-center justify-center">
+              <!-- Center Spindle Pin -->
+              <div class="w-[22%] h-[22%] rounded-full bg-gradient-to-br from-zinc-100 via-zinc-300 to-zinc-500 shadow-[0_2px_4px_rgba(0,0,0,0.7)] border border-black/30"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stationary Light Reflection Sheen -->
+        <div class="vinyl-sheen absolute inset-[5px] rounded-full"></div>
+      </div>
+
+      <!-- Subtle Ambient Crackle Toggle Dot (Bottom-Left) -->
+      <button id="crackleBtn" type="button" title="LP 지지직 노이즈" class="absolute bottom-5 left-5 w-7 h-7 rounded-full bg-white/[0.05] hover:bg-white/[0.12] border border-white/[0.1] flex items-center justify-center transition-all">
+        <span id="crackleLed" class="w-1.5 h-1.5 rounded-full transition-all"></span>
+      </button>
+
+      <!-- Subtle Tonearm Rest Cradle (Right Side) -->
+      <div class="absolute right-[9.5%] top-[52%] w-3.5 h-6 rounded-full bg-black/50 border border-white/10 shadow-inner pointer-events-none"></div>
+
+      <!-- Interactive Draggable Tonearm Assembly (Pivoted at Top-Right) -->
+      <div id="tonearmPivot"
+           style="top: 14%; right: 11%; width: 0; height: 0; transform: rotate(2deg);"
+           class="absolute z-30 cursor-pointer active:cursor-pointer touch-none">
+
+        <!-- Metallic Pivot Base -->
+        <div class="absolute -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-white/20 via-black/60 to-black/90 border border-white/15 shadow-[0_8px_18px_rgba(0,0,0,0.75)] flex items-center justify-center pointer-events-none">
+          <div id="pivotCap" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full shadow-inner border border-black/30" style="background: radial-gradient(circle at 35% 35%, #ffffff, var(--arm-color));"></div>
+        </div>
+
+        <!-- Counterweight (Behind Pivot) -->
+        <div class="absolute -translate-x-1/2 -translate-y-[145%] w-5 h-6 rounded-sm shadow-md border border-black/30 pointer-events-none" style="background: linear-gradient(90deg, rgba(0,0,0,0.3), var(--arm-color), rgba(0,0,0,0.35));"></div>
+
+        <!-- S-Shaped Tonearm Wand + Headshell SVG -->
+        <svg id="tonearmSvg" viewBox="-40 -10 80 230" class="absolute -left-[40px] -top-[10px] w-[80px] h-[215px] sm:h-[235px] overflow-visible drop-shadow-[0_10px_14px_rgba(0,0,0,0.7)]">
+          <!-- Tonearm Collar -->
+          <rect id="armCollar" x="-5" y="18" width="10" height="18" rx="2" fill="var(--arm-color)" stroke="#140f24" stroke-width="1" />
+
+          <!-- Sleek Curved S-Tube -->
+          <path id="armTube" d="M 0 34 L 0 112 C 0 132, -16 144, -16 164 L -16 178"
+                fill="none"
+                stroke="var(--arm-color)"
+                stroke-width="4.5"
+                stroke-linecap="round" />
+
+          <!-- Headshell & Cartridge -->
+          <g transform="translate(-16, 178) rotate(16)">
+            <!-- Cartridge Body -->
+            <rect id="armHead" x="-6.5" y="0" width="13" height="24" rx="2.5" fill="var(--head-color)" stroke="#19112b" stroke-width="1.2" />
+            <!-- Finger Lift Lever -->
+            <path d="M 6.5 8 L 15 11" stroke="var(--arm-color)" stroke-width="2.2" stroke-linecap="round" />
+            <!-- Needle Tip Glow -->
+            <circle id="stylusTip" cx="0" cy="25" r="2" fill="#ffe5ec" />
+          </g>
+
+          <!-- Invisible Wide Hitbox for Effortless Clicking -->
+          <rect x="-36" y="25" width="56" height="192" fill="transparent" />
+        </svg>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Section: Track Title Above Search Bar + Playlist & Repeat Controls -->
+  <footer class="w-full max-w-md z-30 flex flex-col gap-2">
+
+    <!-- Collapsible Drawer (Search Results OR Playlist Queue OR Built-in ASMR/Lo-Fi) -->
+    <div id="bottomDrawer" class="hidden glass-pill rounded-2xl p-2.5 max-h-64 overflow-y-auto flex flex-col gap-1.5">
+      <!-- Populated dynamically -->
+    </div>
+
+    <!-- Track Title & Playback Mode Row -->
+    <div class="flex flex-col gap-1.5 px-2">
+      <div class="flex items-center justify-between gap-2">
+        <div class="min-w-0 flex-1 flex items-baseline gap-2">
+          <span id="trackTitle" class="text-xs sm:text-sm font-medium text-white/95 truncate">
+            로파이 피아노 & 빗소리
+          </span>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <!-- Repeat Mode Toggle Icon: Repeat One (↻1) vs Sequential Queue (⇄) -->
+          <button id="repeatModeBtn" type="button" title="한곡 반복 중 (클릭 시 다음곡 순차 재생)" class="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/[0.14] border border-white/[0.1] text-white/85 flex items-center justify-center transition">
+            <!-- Icon injected by JS -->
+          </button>
+
+          <!-- Playlist Queue Toggle Icon with Badge -->
+          <button id="playlistToggleBtn" type="button" title="재생 목록" class="relative w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/[0.14] border border-white/[0.1] text-white/85 flex items-center justify-center transition">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke-linecap="round" />
+            </svg>
+            <span id="queueCountBadge" class="hidden absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full text-[9px] font-semibold text-white flex items-center justify-center" style="background-color: var(--accent-color);">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Interactive Thin Progress Line & Small Circle Thumb + Elapsed / Remaining Time -->
+      <div class="flex items-center gap-2.5">
+        <span id="timeCurrent" class="text-[10px] text-white/55 font-light tabular-nums shrink-0">00:00</span>
+
+        <div id="progressBarWrap" class="relative flex-1 h-4 flex items-center cursor-pointer touch-none group">
+          <!-- Track Background Line -->
+          <div class="w-full h-[3px] rounded-full bg-white/15 overflow-hidden">
+            <!-- Filled Progress Line -->
+            <div id="progressFill" class="h-full rounded-full transition-[width] duration-75" style="width: 0%; background-color: var(--accent-color);"></div>
+          </div>
+          <!-- Small Progress Circle Thumb -->
+          <div id="progressThumb"
+               class="absolute -translate-x-1/2 w-2.5 h-2.5 rounded-full shadow-[0_0_8px_var(--accent-color)] border border-white/85 transition-transform group-hover:scale-125 pointer-events-none"
+               style="left: 0%; background-color: var(--accent-color);"></div>
+        </div>
+
+        <span id="timeRemaining" class="text-[10px] text-white/45 font-light tabular-nums shrink-0">-03:00</span>
+      </div>
+    </div>
+
+    <!-- Single Clean Search / Link Input Pill -->
+    <div class="glass-pill rounded-full px-3.5 py-2 flex items-center gap-2">
+      <!-- Built-in ASMR & Lofi Preset Switcher Button -->
+      <button id="lofiPresetBtn" type="button" title="기본 ASMR & 로파이 트랙" class="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] flex items-center justify-center text-white/80 transition shrink-0">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="12" r="2.5" />
+        </svg>
+      </button>
+
+      <!-- YouTube Search or URL Input -->
+      <form id="searchForm" class="flex-1 flex items-center min-w-0">
+        <input id="searchInput"
+               type="text"
+               placeholder="유튜브 검색 또는 링크 붙여넣기"
+               autocomplete="off"
+               class="w-full bg-transparent text-xs sm:text-sm text-white placeholder-white/40 focus:outline-none px-1" />
+      </form>
+
+      <!-- Search Trigger Button -->
+      <button id="searchSubmitBtn" type="button" title="검색" class="w-8 h-8 rounded-full bg-white/[0.1] hover:bg-white/[0.2] text-white flex items-center justify-center transition shrink-0">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-3.5-3.5" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <!-- Local Audio File Upload Icon -->
+      <label title="내 기기 음원" class="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/75 flex items-center justify-center cursor-pointer transition shrink-0">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M9 18V5l12-2v13" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="18" cy="16" r="3" />
+        </svg>
+        <input id="localFileInput" type="file" accept="audio/*" class="hidden" />
+      </label>
+    </div>
+  </footer>
+
+  <!-- Reactive Theme & Color Customization Modal -->
+  <div id="themeModalBackdrop" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="themeModalCard" class="glass-pill w-full max-w-xs rounded-3xl p-5 flex flex-col gap-4 text-white">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium tracking-wide text-white/90">분위기 · 색상</span>
+        <button id="themeCloseBtn" type="button" class="w-7 h-7 rounded-full bg-white/[0.08] hover:bg-white/[0.16] flex items-center justify-center text-white/75 transition">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mood Presets -->
+      <div class="flex flex-col gap-1.5">
+        <span class="text-[11px] text-white/55">무드 프리셋</span>
+        <div id="moodPresetsGrid" class="grid grid-cols-5 gap-2">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Individual Color Pickers -->
+      <div class="flex flex-col gap-2.5 pt-1 border-t border-white/10">
+        <label class="flex items-center justify-between text-xs text-white/85 cursor-pointer">
+          <span>전체 배경</span>
+          <input id="pickerBg" type="color" value="#362254" class="w-7 h-7" />
+        </label>
+        <label class="flex items-center justify-between text-xs text-white/85 cursor-pointer">
+          <span>레코드판</span>
+          <input id="pickerVinyl" type="color" value="#161321" class="w-7 h-7" />
+        </label>
+        <label class="flex items-center justify-between text-xs text-white/85 cursor-pointer">
+          <span>중앙 라벨</span>
+          <input id="pickerLabel" type="color" value="#e57a94" class="w-7 h-7" />
+        </label>
+        <label class="flex items-center justify-between text-xs text-white/85 cursor-pointer">
+          <span>막대 (톤암)</span>
+          <input id="pickerArm" type="color" value="#e6dce8" class="w-7 h-7" />
+        </label>
+        <label class="flex items-center justify-between text-xs text-white/85 cursor-pointer">
+          <span>바늘 헤드</span>
+          <input id="pickerHead" type="color" value="#f29bb0" class="w-7 h-7" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc,
+      updateDoc,
+      onSnapshot,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // =========================================================================
+    // 1. SINGLE SHARED FIREBASE ROOM ('our-shared-turntable')
+    // =========================================================================
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'couple-vinyl-app';
+    const SHARED_ROOM_ID = 'our-shared-turntable';
+    const sessionId = crypto.randomUUID();
+
+    let db = null;
+    let currentUser = null;
+    let firebaseReady = false;
+
+    async function initFirebase() {
+      try {
+        // 본인의 파이어베이스 설정값 적용완료
+        const firebaseConfig = {
+          apiKey: "AIzaSyBB-i84bHSFKRuCqptojHpodcS0CytfEI8",
+          authDomain: "our-turntable.firebaseapp.com",
+          databaseURL: "https://our-turntable-default-rtdb.firebaseio.com",
+          projectId: "our-turntable",
+          storageBucket: "our-turntable.appspot.com",
+          messagingSenderId: "175737875645",
+          appId: "1:175737875645:web:2507bf910f9c6712ac5bd4"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        db = getFirestore(app);
+
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          const cred = await signInWithCustomToken(auth, __initial_auth_token);
+          currentUser = cred.user;
+        } else {
+          const cred = await signInAnonymously(auth);
+          currentUser = cred.user;
+        }
+        firebaseReady = true;
+        connectSharedTurntable();
+      } catch (err) {
+        console.warn("Offline/Local mode:", err);
+        document.getElementById('syncText').textContent = '로컬 모드';
+      }
+    }
+
+    function getSharedDocRef() {
+      return doc(db, 'artifacts', appId, 'public', 'data', 'turntable_rooms', SHARED_ROOM_ID);
+    }
+
+    // =========================================================================
+    // 2. THEME & COLOR CUSTOMIZATION ENGINE
+    // =========================================================================
+    const MOOD_PRESETS = [
+      {
+        name: "보랏빛 저녁",
+        bg: "#362254",
+        vinyl: "#161321",
+        label: "#e57a94",
+        arm: "#e6dce8",
+        head: "#f29bb0"
+      },
+      {
+        name: "새벽 분홍 구름",
+        bg: "#4a2545",
+        vinyl: "#1b121e",
+        label: "#ff9ebb",
+        arm: "#f7e8f0",
+        head: "#ff7597"
+      },
+      {
+        name: "깊은 밤 남색",
+        bg: "#1b2845",
+        vinyl: "#10141f",
+        label: "#7aa2f7",
+        arm: "#dce4f7",
+        head: "#9ece6a"
+      },
+      {
+        name: "따뜻한 크림 LP",
+        bg: "#3d2c2e",
+        vinyl: "#241b1c",
+        label: "#e09f7d",
+        arm: "#f2e9e4",
+        head: "#d97757"
+      },
+      {
+        name: "새벽 안개 민트",
+        bg: "#1f363d",
+        vinyl: "#121c21",
+        label: "#70a9a1",
+        arm: "#e0fbfc",
+        head: "#9ec1a3"
+      }
+    ];
+
+    function shiftHex(hex, amount) {
+      const clean = hex.replace('#', '');
+      const num = parseInt(clean, 16);
+      const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+      const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
+      const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount));
+      return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+    }
+
+    function hexToRgba(hex, alpha) {
+      const clean = hex.replace('#', '');
+      const num = parseInt(clean, 16);
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function applyThemeVariables(theme) {
+      if (!theme) return;
+      const root = document.documentElement;
+      const bgCenter = theme.bg || "#362254";
+      const bgMid = shiftHex(bgCenter, -26);
+      const bgEdge = shiftHex(bgCenter, -44);
+      const vinylBase = theme.vinyl || "#161321";
+      const vinylHighlight = shiftHex(vinylBase, 24);
+      const labelColor = theme.label || "#e57a94";
+      const armColor = theme.arm || "#e6dce8";
+      const headColor = theme.head || "#f29bb0";
+
+      root.style.setProperty('--bg-center', bgCenter);
+      root.style.setProperty('--bg-mid', bgMid);
+      root.style.setProperty('--bg-edge', bgEdge);
+      root.style.setProperty('--vinyl-base', vinylBase);
+      root.style.setProperty('--vinyl-highlight', vinylHighlight);
+      root.style.setProperty('--label-color', labelColor);
+      root.style.setProperty('--arm-color', armColor);
+      root.style.setProperty('--head-color', headColor);
+      root.style.setProperty('--accent-color', labelColor);
+      root.style.setProperty('--glow-rgba', hexToRgba(labelColor, 0.26));
+      root.style.setProperty('--modal-bg', hexToRgba(bgMid, 0.86));
+      root.style.setProperty('--modal-border', hexToRgba(labelColor, 0.34));
+
+      document.getElementById('pickerBg').value = bgCenter;
+      document.getElementById('pickerVinyl').value = vinylBase;
+      document.getElementById('pickerLabel').value = labelColor;
+      document.getElementById('pickerArm').value = armColor;
+      document.getElementById('pickerHead').value = headColor;
+    }
+
+    // =========================================================================
+    // 3. BUILT-IN 12 LOCKED ASMR & LO-FI TRACKS + SYNTH ENGINE
+    // =========================================================================
+    const BUILTIN_TRACKS = [
+      {
+        id: 'lofi-0',
+        sourceType: 'lofi',
+        lofiIndex: 0,
+        locked: true,
+        pureAsmr: false,
+        title: "로파이 피아노 & 빗소리",
+        subtitle: "따뜻한 로파이 피아노 연주와 잔잔한 빗소리",
+        profile: "rain_piano",
+        duration: 180,
+        bpm: 72,
+        chords: [
+          [261.63, 329.63, 392.00, 493.88],
+          [220.00, 261.63, 329.63, 392.00],
+          [174.61, 220.00, 261.63, 329.63],
+          [196.00, 246.94, 293.66, 349.23]
+        ],
+        melody: [523.25, 493.88, 392.00, 329.63, 440.00, 392.00, 349.23, 329.63]
+      },
+      {
+        id: 'lofi-1',
+        sourceType: 'lofi',
+        lofiIndex: 1,
+        locked: true,
+        pureAsmr: true,
+        title: "따뜻한 키보드 타자소리",
+        subtitle: "순수 기계식 키보드 타건음 & 스페이스바 ASMR",
+        profile: "keyboard_asmr",
+        duration: 210,
+        bpm: 86
+      },
+      {
+        id: 'lofi-2',
+        sourceType: 'lofi',
+        lofiIndex: 2,
+        locked: true,
+        pureAsmr: true,
+        title: "창가 자리 비행기",
+        subtitle: "순수 기내 백색소음 & 저주파 제트 엔진 허밍",
+        profile: "airplane_cabin",
+        duration: 240,
+        bpm: 64
+      },
+      {
+        id: 'lofi-3',
+        sourceType: 'lofi',
+        lofiIndex: 3,
+        locked: true,
+        pureAsmr: true,
+        title: "아늑한 도서관",
+        subtitle: "순수 도서관 정적 & 간헐적 책장 넘기는 소리",
+        profile: "cozy_library",
+        duration: 200,
+        bpm: 68
+      },
+      {
+        id: 'lofi-4',
+        sourceType: 'lofi',
+        lofiIndex: 4,
+        locked: true,
+        pureAsmr: true,
+        title: "차분한 연필 사각소리",
+        subtitle: "순수 종이 위 연필 필기 사각거림 & 종이 넘김",
+        profile: "pencil_sketch",
+        duration: 190,
+        bpm: 78
+      },
+      {
+        id: 'lofi-5',
+        sourceType: 'lofi',
+        lofiIndex: 5,
+        locked: true,
+        pureAsmr: true,
+        title: "모닥불 타닥이는 밤",
+        subtitle: "순수 장작불 타닥거림 & 따뜻한 불꽃 소리",
+        profile: "campfire_night",
+        duration: 215,
+        bpm: 66
+      },
+      {
+        id: 'lofi-6',
+        sourceType: 'lofi',
+        lofiIndex: 6,
+        locked: true,
+        pureAsmr: true,
+        title: "파도치는 새벽 해변",
+        subtitle: "순수 백사장에 밀려오고 부서지는 잔잔한 파도",
+        profile: "ocean_waves",
+        duration: 230,
+        bpm: 65
+      },
+      {
+        id: 'lofi-7',
+        sourceType: 'lofi',
+        lofiIndex: 7,
+        locked: true,
+        pureAsmr: true,
+        title: "시골 밤의 풀벌레 소리",
+        subtitle: "순수 여름밤 귀뚜라미 울음 & 산들바람 소리",
+        profile: "night_crickets",
+        duration: 210,
+        bpm: 70
+      },
+      {
+        id: 'lofi-8',
+        sourceType: 'lofi',
+        lofiIndex: 8,
+        locked: true,
+        pureAsmr: true,
+        title: "창밖의 여름 소나기",
+        subtitle: "순수 유리창을 두드리는 빗줄기 & 먼 천둥 울림",
+        profile: "summer_rain",
+        duration: 225,
+        bpm: 68
+      },
+      {
+        id: 'lofi-9',
+        sourceType: 'lofi',
+        lofiIndex: 9,
+        locked: true,
+        pureAsmr: false,
+        title: "새벽 2시, 보랏빛 잔향",
+        subtitle: "로파이 일렉트릭 피아노 & 브러시 비트",
+        profile: "lofi_classic",
+        duration: 165,
+        bpm: 74,
+        chords: [
+          [261.63, 329.63, 392.00, 493.88],
+          [220.00, 261.63, 329.63, 392.00],
+          [174.61, 220.00, 261.63, 329.63],
+          [196.00, 246.94, 293.66, 349.23]
+        ],
+        melody: [523.25, 493.88, 392.00, 329.63, 440.00, 392.00, 349.23, 329.63]
+      },
+      {
+        id: 'lofi-10',
+        sourceType: 'lofi',
+        lofiIndex: 10,
+        locked: true,
+        pureAsmr: false,
+        title: "비 오는 날의 재즈 카페",
+        subtitle: "재즈 로파이 피아노 + 빗소리 & 잔 부딪힘",
+        profile: "rainy_cafe",
+        duration: 185,
+        bpm: 76,
+        chords: [
+          [220.00, 261.63, 329.63, 392.00],
+          [146.83, 220.00, 261.63, 329.63],
+          [196.00, 246.94, 293.66, 349.23],
+          [261.63, 329.63, 392.00, 493.88]
+        ],
+        melody: [523.25, 493.88, 440.00, 392.00, 349.23, 392.00, 440.00, 493.88]
+      },
+      {
+        id: 'lofi-11',
+        sourceType: 'lofi',
+        lofiIndex: 11,
+        locked: true,
+        pureAsmr: false,
+        title: "오르골 자장가",
+        subtitle: "맑은 오르골 멜로디 & 잔잔한 밤공기",
+        profile: "music_box",
+        duration: 170,
+        bpm: 68,
+        chords: [
+          [261.63, 329.63, 392.00],
+          [196.00, 246.94, 293.66],
+          [220.00, 261.63, 329.63],
+          [174.61, 220.00, 261.63]
+        ],
+        melody: [523.25, 659.25, 783.99, 659.25, 587.33, 659.25, 523.25, 392.00]
+      }
+    ];
+
+    class WarmAsmrLofiEngine {
+      constructor() {
+        this.ctx = null;
+        this.master = null;
+        this.timer = null;
+        this.step = 0;
+        this.playing = false;
+        this.crackleOn = true;
+        this.crackleNode = null;
+        this.bedNodes = [];
+      }
+
+      unlock() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AC();
+          this.master = this.ctx.createGain();
+          this.master.gain.value = 0.72;
+          this.master.connect(this.ctx.destination);
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      start(trackIdx, offsetSec = 0) {
+        this.unlock();
+        this.stop();
+        this.playing = true;
+        const tr = BUILTIN_TRACKS[trackIdx] || BUILTIN_TRACKS[0];
+        const stepSec = (60 / tr.bpm) / 2;
+        this.step = Math.floor(offsetSec / stepSec);
+
+        this.startAmbientBed(tr.profile);
+
+        const tick = () => {
+          if (!this.playing) return;
+          const now = this.ctx.currentTime;
+          const s = this.step % 8;
+
+          if (tr.pureAsmr) {
+            if (tr.profile === 'keyboard_asmr') {
+              const burst = (this.step % 6 === 5) ? 0 : ((s % 2 === 0) ? 2 : 1);
+              for (let k = 0; k < burst; k++) {
+                if (Math.random() < 0.88) {
+                  const jitter = k * (stepSec * 0.38) + Math.random() * 0.045;
+                  const isSpace = (s === 7 && k === 0) || (k === burst - 1 && Math.random() < 0.18);
+                  this.playKeystroke(now + jitter, isSpace);
+                }
+              }
+            } else if (tr.profile === 'cozy_library') {
+              if (s === 3 && Math.random() < 0.38) {
+                this.playPageTurn(now);
+              } else if (s === 6 && Math.random() < 0.14) {
+                this.playLibraryChairCreak(now);
+              }
+            } else if (tr.profile === 'pencil_sketch') {
+              if (s % 2 === 0 || Math.random() < 0.62) {
+                this.playPencilStroke(now, 0.12 + Math.random() * 0.13);
+              }
+              if (s === 7 && Math.random() < 0.22) {
+                this.playPageTurn(now + 0.08);
+              }
+            } else if (tr.profile === 'campfire_night') {
+              if (Math.random() < 0.72) {
+                this.playCampfirePop(now + Math.random() * 0.22);
+              }
+              if (Math.random() < 0.35) {
+                this.playCampfirePop(now + 0.15 + Math.random() * 0.2);
+              }
+            } else if (tr.profile === 'night_crickets') {
+              if (s === 0 || s === 1 || s === 4 || s === 5) {
+                if (Math.random() < 0.78) {
+                  this.playNightCricket(now + Math.random() * 0.06, 4050);
+                }
+              }
+              if ((s === 2 || s === 6) && Math.random() < 0.5) {
+                this.playNightCricket(now + 0.08, 3650);
+              }
+            } else if (tr.profile === 'summer_rain') {
+              if (s === 0 && (this.step % 32 === 0) && Math.random() < 0.65) {
+                this.playDistantThunder(now);
+              }
+            }
+            this.step++;
+            return;
+          }
+
+          const bar = Math.floor(this.step / 8) % tr.chords.length;
+          if (tr.profile === 'music_box') {
+            if (s === 0) this.playPadChord(tr.chords[bar], now, stepSec * 7.5, 0.022);
+            const note = tr.melody[this.step % tr.melody.length];
+            this.playMusicBoxBell(note, now, stepSec * 2.2);
+            if (s === 2 || s === 6) this.playNightCricket(now, 4150);
+          } else {
+            if (s === 0) this.playPadChord(tr.chords[bar], now, stepSec * 7.6, 0.05);
+            if (s === 0 || s === 5) this.playSoftKick(now);
+            if (s === 2 || s === 6) this.playSoftBrush(now);
+
+            if ((s === 1 || s === 4 || s === 6) && (this.step + bar) % 2 === 0) {
+              const f = tr.melody[(bar * 2 + Math.floor(s / 2)) % tr.melody.length];
+              this.playRhodesNote(f, now, stepSec * 2.6, 0.036);
+            }
+
+            if (tr.profile === 'rainy_cafe' && s === 5 && Math.random() < 0.28) {
+              this.playCafeCupClink(now);
+            }
+          }
+
+          this.step++;
+        };
+
+        tick();
+        this.timer = setInterval(tick, stepSec * 1000);
+        this.updateCrackle();
+      }
+
+      stop() {
+        this.playing = false;
+        if (this.timer) {
+          clearInterval(this.timer);
+          this.timer = null;
+        }
+        this.stopAmbientBed();
+        this.stopCrackle();
+      }
+
+      stopAmbientBed() {
+        this.bedNodes.forEach(node => {
+          try {
+            if (node.stop) node.stop();
+            if (node.disconnect) node.disconnect();
+          } catch (e) {}
+        });
+        this.bedNodes = [];
+      }
+
+      createNoiseBuffer(seconds = 4) {
+        const sr = this.ctx.sampleRate;
+        const len = Math.floor(sr * seconds);
+        const buf = this.ctx.createBuffer(1, len, sr);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) {
+          d[i] = Math.random() * 2 - 1;
+        }
+        return buf;
+      }
+
+      startAmbientBed(profile) {
+        this.stopAmbientBed();
+        if (!this.ctx) return;
+
+        if (profile === 'rain_piano' || profile === 'rainy_cafe' || profile === 'summer_rain') {
+          const src = this.ctx.createBufferSource();
+          src.buffer = this.createNoiseBuffer(4);
+          src.loop = true;
+          const lp = this.ctx.createBiquadFilter();
+          lp.type = 'lowpass';
+          lp.frequency.value = profile === 'summer_rain' ? 1850 : (profile === 'rain_piano' ? 1450 : 1100);
+          const hp = this.ctx.createBiquadFilter();
+          hp.type = 'highpass';
+          hp.frequency.value = 220;
+          const g = this.ctx.createGain();
+          g.gain.value = profile === 'summer_rain' ? 0.22 : (profile === 'rain_piano' ? 0.13 : 0.09);
+          src.connect(hp);
+          hp.connect(lp);
+          lp.connect(g);
+          g.connect(this.master);
+          src.start();
+          this.bedNodes.push(src, hp, lp, g);
+        } else if (profile === 'airplane_cabin') {
+          const src = this.ctx.createBufferSource();
+          src.buffer = this.createNoiseBuffer(5);
+          src.loop = true;
+          const lp = this.ctx.createBiquadFilter();
+          lp.type = 'lowpass';
+          lp.frequency.value = 310;
+          const g = this.ctx.createGain();
+          g.gain.value = 0.36;
+
+          const airSrc = this.ctx.createBufferSource();
+          airSrc.buffer = this.createNoiseBuffer(4);
+          airSrc.loop = true;
+          const airBp = this.ctx.createBiquadFilter();
+          airBp.type = 'bandpass';
+          airBp.frequency.value = 950;
+          airBp.Q.value = 0.7;
+          const airGain = this.ctx.createGain();
+          airGain.gain.value = 0.045;
+
+          const hum = this.ctx.createOscillator();
+          hum.type = 'sine';
+          hum.frequency.value = 76;
+          const humGain = this.ctx.createGain();
+          humGain.gain.value = 0.065;
+
+          src.connect(lp);
+          lp.connect(g);
+          g.connect(this.master);
+          airSrc.connect(airBp);
+          airBp.connect(airGain);
+          airGain.connect(this.master);
+          hum.connect(humGain);
+          humGain.connect(this.master);
+
+          src.start();
+          airSrc.start();
+          hum.start();
+          this.bedNodes.push(src, lp, g, airSrc, airBp, airGain, hum, humGain);
+        } else if (profile === 'ocean_waves') {
+          const src = this.ctx.createBufferSource();
+          src.buffer = this.createNoiseBuffer(5);
+          src.loop = true;
+          const lp = this.ctx.createBiquadFilter();
+          lp.type = 'lowpass';
+          lp.frequency.value = 680;
+          const waveGain = this.ctx.createGain();
+          waveGain.gain.value = 0.18;
+
+          const lfo = this.ctx.createOscillator();
+          lfo.type = 'sine';
+          lfo.frequency.value = 0.13;
+          const lfoDepth = this.ctx.createGain();
+          lfoDepth.gain.value = 0.13;
+          const filterLfoDepth = this.ctx.createGain();
+          filterLfoDepth.gain.value = 460;
+
+          lfo.connect(lfoDepth);
+          lfoDepth.connect(waveGain.gain);
+          lfo.connect(filterLfoDepth);
+          filterLfoDepth.connect(lp.frequency);
+
+          src.connect(lp);
+          lp.connect(waveGain);
+          waveGain.connect(this.master);
+
+          src.start();
+          lfo.start();
+          this.bedNodes.push(src, lp, waveGain, lfo, lfoDepth, filterLfoDepth);
+        } else if (profile === 'campfire_night') {
+          const src = this.ctx.createBufferSource();
+          src.buffer = this.createNoiseBuffer(3);
+          src.loop = true;
+          const lp = this.ctx.createBiquadFilter();
+          lp.type = 'lowpass';
+          lp.frequency.value = 390;
+          const g = this.ctx.createGain();
+          g.gain.value = 0.13;
+          src.connect(lp);
+          lp.connect(g);
+          g.connect(this.master);
+          src.start();
+          this.bedNodes.push(src, lp, g);
+        } else if (profile === 'cozy_library' || profile === 'keyboard_asmr' || profile === 'pencil_sketch') {
+          const src = this.ctx.createBufferSource();
+          src.buffer = this.createNoiseBuffer(4);
+          src.loop = true;
+          const lp = this.ctx.createBiquadFilter();
+          lp.type = 'lowpass';
+          lp.frequency.value = 420;
+          const g = this.ctx.createGain();
+          g.gain.value = 0.032;
+          src.connect(lp);
+          lp.connect(g);
+          g.connect(this.master);
+          src.start();
+          this.bedNodes.push(src, lp, g);
+        } else if (profile === 'night_crickets') {
+          const src = this.ctx.createBufferSource();
+          src.buffer = this.createNoiseBuffer(4);
+          src.loop = true;
+          const bp = this.ctx.createBiquadFilter();
+          bp.type = 'bandpass';
+          bp.frequency.value = 520;
+          bp.Q.value = 0.9;
+          const g = this.ctx.createGain();
+          g.gain.value = 0.045;
+          src.connect(bp);
+          bp.connect(g);
+          g.connect(this.master);
+          src.start();
+          this.bedNodes.push(src, bp, g);
+        }
+      }
+
+      playKeystroke(t, isSpacebar = false) {
+        const len = Math.floor(this.ctx.sampleRate * (isSpacebar ? 0.06 : 0.045));
+        const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) {
+          d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.24));
+        }
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        const bp = this.ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = isSpacebar ? 720 : (1320 + Math.random() * 580);
+        bp.Q.value = 1.5;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(isSpacebar ? 0.24 : 0.18, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + (isSpacebar ? 0.06 : 0.045));
+        src.connect(bp);
+        bp.connect(g);
+        g.connect(this.master);
+        src.start(t);
+      }
+
+      playPageTurn(t) {
+        const len = Math.floor(this.ctx.sampleRate * 0.36);
+        const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) {
+          const env = Math.sin((i / len) * Math.PI);
+          d[i] = (Math.random() * 2 - 1) * env * 0.7;
+        }
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        const bp = this.ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(880, t);
+        bp.frequency.linearRampToValueAtTime(2350, t + 0.34);
+        bp.Q.value = 1.05;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.001, t);
+        g.gain.linearRampToValueAtTime(0.18, t + 0.14);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.36);
+        src.connect(bp);
+        bp.connect(g);
+        g.connect(this.master);
+        src.start(t);
+      }
+
+      playLibraryChairCreak(t) {
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(190, t);
+        osc.frequency.linearRampToValueAtTime(155, t + 0.22);
+        g.gain.setValueAtTime(0.001, t);
+        g.gain.linearRampToValueAtTime(0.022, t + 0.06);
+        g.gain.exponentialRampToValueAtTime(0.0005, t + 0.24);
+        osc.connect(g);
+        g.connect(this.master);
+        osc.start(t);
+        osc.stop(t + 0.26);
+      }
+
+      playPencilStroke(t, dur) {
+        const len = Math.floor(this.ctx.sampleRate * dur);
+        const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) {
+          const env = Math.sin((i / len) * Math.PI);
+          d[i] = (Math.random() * 2 - 1) * env;
+        }
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        const bp = this.ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = 2550 + Math.random() * 750;
+        bp.Q.value = 2.2;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.15, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        src.connect(bp);
+        bp.connect(g);
+        g.connect(this.master);
+        src.start(t);
+      }
+
+      playCampfirePop(t) {
+        const len = Math.floor(this.ctx.sampleRate * 0.032);
+        const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) {
+          d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.18));
+        }
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        const hp = this.ctx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.value = 1350;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.22, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.032);
+        src.connect(hp);
+        hp.connect(g);
+        g.connect(this.master);
+        src.start(t);
+      }
+
+      playDistantThunder(t) {
+        const len = Math.floor(this.ctx.sampleRate * 2.4);
+        const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) {
+          const env = Math.sin(Math.min(1, i / (len * 0.18)) * (Math.PI / 2)) * Math.exp(-i / (len * 0.55));
+          d[i] = (Math.random() * 2 - 1) * env;
+        }
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        const lp = this.ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.value = 140;
+        const g = this.ctx.createGain();
+        g.gain.value = 0.35;
+        src.connect(lp);
+        lp.connect(g);
+        g.connect(this.master);
+        src.start(t);
+      }
+
+      playCafeCupClink(t) {
+        [1850, 2780].forEach(freq => {
+          const osc = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t);
+          g.gain.setValueAtTime(0.025, t);
+          g.gain.exponentialRampToValueAtTime(0.0005, t + 0.18);
+          osc.connect(g);
+          g.connect(this.master);
+          osc.start(t);
+          osc.stop(t + 0.2);
+        });
+      }
+
+      playMusicBoxBell(f, t, dur) {
+        const osc = this.ctx.createOscillator();
+        const overtone = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f * 2, t);
+        overtone.type = 'sine';
+        overtone.frequency.setValueAtTime(f * 4, t);
+        const og = this.ctx.createGain();
+        og.gain.value = 0.18;
+        g.gain.setValueAtTime(0.001, t);
+        g.gain.linearRampToValueAtTime(0.055, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0004, t + dur);
+        overtone.connect(og);
+        og.connect(g);
+        osc.connect(g);
+        g.connect(this.master);
+        osc.start(t);
+        overtone.start(t);
+        osc.stop(t + dur + 0.05);
+        overtone.stop(t + dur + 0.05);
+      }
+
+      playNightCricket(t) {
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(4150, t);
+        g.gain.setValueAtTime(0.008, t);
+        g.gain.exponentialRampToValueAtTime(0.0002, t + 0.09);
+        osc.connect(g);
+        g.connect(this.master);
+        osc.start(t);
+        osc.stop(t + 0.1);
+      }
+
+      playPadChord(freqs, t, dur, peakGain = 0.05) {
+        freqs.forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const filter = this.ctx.createBiquadFilter();
+          const g = this.ctx.createGain();
+          osc.type = i % 2 === 0 ? 'triangle' : 'sine';
+          osc.frequency.setValueAtTime(f, t);
+          osc.frequency.linearRampToValueAtTime(f * 0.997, t + dur * 0.5);
+          filter.type = 'lowpass';
+          filter.frequency.value = 880;
+          g.gain.setValueAtTime(0.001, t);
+          g.gain.linearRampToValueAtTime(peakGain, t + 0.12);
+          g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+          osc.connect(filter);
+          filter.connect(g);
+          g.connect(this.master);
+          osc.start(t);
+          osc.stop(t + dur + 0.05);
+        });
+      }
+
+      playRhodesNote(f, t, dur, peakGain = 0.036) {
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, t);
+        g.gain.setValueAtTime(0.001, t);
+        g.gain.linearRampToValueAtTime(peakGain, t + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+        osc.connect(g);
+        g.connect(this.master);
+        osc.start(t);
+        osc.stop(t + dur + 0.05);
+      }
+
+      playSoftKick(t) {
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(102, t);
+        osc.frequency.exponentialRampToValueAtTime(40, t + 0.15);
+        g.gain.setValueAtTime(0.18, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        osc.connect(g);
+        g.connect(this.master);
+        osc.start(t);
+        osc.stop(t + 0.2);
+      }
+
+      playSoftBrush(t) {
+        const len = Math.floor(this.ctx.sampleRate * 0.12);
+        const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.35));
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        const flt = this.ctx.createBiquadFilter();
+        flt.type = 'bandpass';
+        flt.frequency.value = 1350;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.075, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+        src.connect(flt);
+        flt.connect(g);
+        g.connect(this.master);
+        src.start(t);
+      }
+
+      updateCrackle() {
+        if (!this.ctx) return;
+        if (this.crackleOn && !this.crackleNode) {
+          const sr = this.ctx.sampleRate;
+          const len = sr * 3;
+          const buf = this.ctx.createBuffer(1, len, sr);
+          const d = buf.getChannelData(0);
+          for (let i = 0; i < len; i++) {
+            const pop = Math.random() < 0.0015 ? (Math.random() * 2 - 1) * 0.42 : 0;
+            d[i] = pop + (Math.random() * 2 - 1) * 0.009;
+          }
+          const src = this.ctx.createBufferSource();
+          src.buffer = buf;
+          src.loop = true;
+          const flt = this.ctx.createBiquadFilter();
+          flt.type = 'bandpass';
+          flt.frequency.value = 2100;
+          const g = this.ctx.createGain();
+          g.gain.value = 0.26;
+          src.connect(flt);
+          flt.connect(g);
+          g.connect(this.master);
+          src.start();
+          this.crackleNode = src;
+        } else if (!this.crackleOn) {
+          this.stopCrackle();
+        }
+      }
+
+      stopCrackle() {
+        if (this.crackleNode) {
+          try {
+            this.crackleNode.stop();
+            this.crackleNode.disconnect();
+          } catch (e) {}
+          this.crackleNode = null;
+        }
+      }
+    }
+
+    const lofiEngine = new WarmAsmrLofiEngine();
+
+    // =========================================================================
+    // 4. YOUTUBE IFRAME PLAYER INTEGRATION
+    // =========================================================================
+    let ytPlayer = null;
+    let ytReady = false;
+
+    window.onYouTubeIframeAPIReady = function () {
+      ytPlayer = new YT.Player('ytPlayer', {
+        height: '1',
+        width: '1',
+        videoId: '',
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          playsinline: 1,
+          rel: 0
+        },
+        events: {
+          onReady: () => {
+            ytReady = true;
+            syncPlaybackEngines(false);
+          },
+          onStateChange: (e) => {
+            if (e.data === YT.PlayerState.ENDED && state.isPlaying) {
+              handleTrackEnded();
+            }
+          }
+        }
+      });
+    };
+
+    function extractYouTubeId(input) {
+      const trimmed = input.trim();
+      if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+      const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/
+      ];
+      for (const re of patterns) {
+        const m = trimmed.match(re);
+        if (m && m[1]) return m[1];
+      }
+      return null;
+    }
+
+    // =========================================================================
+    // 5. STATE & INDEPENDENT ON/OFF TONEARM LOGIC
+    // =========================================================================
+    const ARM_REST_ANGLE = 2;
+    const ARM_ENGAGE_ANGLE = 22;
+
+    function buildDefaultLockedItems() {
+      return BUILTIN_TRACKS.map(t => ({
+        uid: t.id,
+        locked: true,
+        sourceType: 'lofi',
+        lofiIndex: t.lofiIndex,
+        title: t.title,
+        subtitle: t.subtitle,
+        duration: t.duration
+      }));
+    }
+
+    function ensureLockedTracksPresent(list) {
+      const incoming = Array.isArray(list) ? [...list] : [];
+      const existingIds = new Set(incoming.map(item => item.uid));
+      const missingLocked = buildDefaultLockedItems().filter(def => !existingIds.has(def.uid));
+      const normalized = incoming.map(item => {
+        if (item.uid && item.uid.startsWith('lofi-')) {
+          return { ...item, locked: true };
+        }
+        return item;
+      });
+      return [...missingLocked, ...normalized];
+    }
+
+    const state = {
+      sourceType: 'lofi',
+      lofiIndex: 0,
+      youtubeId: '',
+      youtubeThumb: '',
+      localUrl: '',
+      title: BUILTIN_TRACKS[0].title,
+      duration: BUILTIN_TRACKS[0].duration,
+      isPlaying: false,
+      pausedAt: 0,
+      updatedAtMs: Date.now(),
+      repeatMode: 'one',
+      playlist: buildDefaultLockedItems(),
+      currentQueueUid: 'lofi-0',
+      crackle: true,
+      theme: { ...MOOD_PRESETS[0] },
+      vinylAngle: 0,
+      vinylVelocity: 0,
+      endHandledAt: 0
+    };
+
+    // DOM Elements
+    const vinylDisc = document.getElementById('vinylDisc');
+    const labelCover = document.getElementById('labelCover');
+    const tonearmPivot = document.getElementById('tonearmPivot');
+    const stylusTip = document.getElementById('stylusTip');
+    const trackTitleEl = document.getElementById('trackTitle');
+    const timeCurrentEl = document.getElementById('timeCurrent');
+    const timeRemainingEl = document.getElementById('timeRemaining');
+    const progressBarWrap = document.getElementById('progressBarWrap');
+    const progressFill = document.getElementById('progressFill');
+    const progressThumb = document.getElementById('progressThumb');
+    const syncDot = document.getElementById('syncDot');
+    const syncText = document.getElementById('syncText');
+    const crackleBtn = document.getElementById('crackleBtn');
+    const crackleLed = document.getElementById('crackleLed');
+    const repeatModeBtn = document.getElementById('repeatModeBtn');
+    const playlistToggleBtn = document.getElementById('playlistToggleBtn');
+    const queueCountBadge = document.getElementById('queueCountBadge');
+    const localAudio = document.getElementById('localAudio');
+
+    function formatTime(sec) {
+      const s = Math.max(0, Math.floor(sec || 0));
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+    }
+
+    function getActiveDuration() {
+      if (state.sourceType === 'youtube' && ytReady && ytPlayer && typeof ytPlayer.getDuration === 'function') {
+        const d = ytPlayer.getDuration();
+        if (d && d > 0) return Math.floor(d);
+      }
+      if (state.sourceType === 'local' && localAudio.duration && !isNaN(localAudio.duration)) {
+        return Math.floor(localAudio.duration);
+      }
+      return state.duration || 180;
+    }
+
+    function getComputedPosition() {
+      const dur = getActiveDuration();
+      if (!state.isPlaying) {
+        return Math.min(dur, Math.max(0, state.pausedAt));
+      }
+      const elapsed = Math.max(0, (Date.now() - state.updatedAtMs) / 1000);
+      return state.pausedAt + elapsed;
+    }
+
+    function handleTrackEnded() {
+      const now = Date.now();
+      if (now - state.endHandledAt < 1500) return;
+      state.endHandledAt = now;
+
+      if (state.repeatMode === 'one' || state.playlist.length <= 1) {
+        pushState({
+          isPlaying: true,
+          pausedAt: 0,
+          updatedAtMs: Date.now()
+        });
+      } else {
+        const idx = state.playlist.findIndex(item => item.uid === state.currentQueueUid);
+        const nextIdx = idx >= 0 ? (idx + 1) % state.playlist.length : 0;
+        playQueueItem(state.playlist[nextIdx]);
+      }
+    }
+
+    tonearmPivot.addEventListener('click', (e) => {
+      e.preventDefault();
+      lofiEngine.unlock();
+      const exactPos = Math.min(getActiveDuration(), getComputedPosition());
+      pushState({
+        isPlaying: !state.isPlaying,
+        pausedAt: exactPos,
+        updatedAtMs: Date.now()
+      });
+    });
+
+    let isDraggingProgress = false;
+    let scrubTargetSec = 0;
+
+    function updateProgressDisplay(posSec, durSec) {
+      const safeDur = Math.max(1, durSec || 1);
+      const clampedPos = Math.max(0, Math.min(safeDur, posSec || 0));
+      const pct = (clampedPos / safeDur) * 100;
+      const remainSec = Math.max(0, safeDur - clampedPos);
+
+      progressFill.style.width = `${pct.toFixed(2)}%`;
+      progressThumb.style.left = `${pct.toFixed(2)}%`;
+      timeCurrentEl.textContent = formatTime(clampedPos);
+      timeRemainingEl.textContent = `-${formatTime(remainSec)}`;
+    }
+
+    function clientXToProgressSec(clientX) {
+      const rect = progressBarWrap.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
+      return Math.floor(ratio * getActiveDuration());
+    }
+
+    progressBarWrap.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      lofiEngine.unlock();
+      isDraggingProgress = true;
+      progressBarWrap.setPointerCapture(e.pointerId);
+      scrubTargetSec = clientXToProgressSec(e.clientX);
+      updateProgressDisplay(scrubTargetSec, getActiveDuration());
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isDraggingProgress) return;
+      scrubTargetSec = clientXToProgressSec(e.clientX);
+      updateProgressDisplay(scrubTargetSec, getActiveDuration());
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      if (!isDraggingProgress) return;
+      isDraggingProgress = false;
+      scrubTargetSec = clientXToProgressSec(e.clientX);
+      pushState({
+        pausedAt: scrubTargetSec,
+        updatedAtMs: Date.now()
+      });
+    });
+
+    function animationLoop() {
+      const targetVel = state.isPlaying ? 1.85 : 0;
+      state.vinylVelocity += (targetVel - state.vinylVelocity) * 0.06;
+      state.vinylAngle = (state.vinylAngle + state.vinylVelocity) % 360;
+      vinylDisc.style.transform = `rotate(${state.vinylAngle.toFixed(2)}deg)`;
+
+      const dur = getActiveDuration();
+      let pos = getComputedPosition();
+
+      if (state.isPlaying && pos >= dur) {
+        pos = dur;
+        handleTrackEnded();
+      }
+
+      const targetArmAngle = state.isPlaying ? ARM_ENGAGE_ANGLE : ARM_REST_ANGLE;
+      const currentArm = parseFloat(tonearmPivot.style.transform.replace('rotate(', '').replace('deg)', '')) || ARM_REST_ANGLE;
+      const newArm = currentArm + (targetArmAngle - currentArm) * 0.15;
+      tonearmPivot.style.transform = `rotate(${newArm.toFixed(2)}deg)`;
+
+      if (!isDraggingProgress) {
+        updateProgressDisplay(pos, dur);
+      }
+
+      stylusTip.setAttribute('fill', state.isPlaying ? '#ffccd5' : '#8e7aa8');
+
+      requestAnimationFrame(animationLoop);
+    }
+    requestAnimationFrame(animationLoop);
+
+    async function pushState(patch) {
+      const next = {
+        sourceType: state.sourceType,
+        lofiIndex: state.lofiIndex,
+        youtubeId: state.youtubeId,
+        youtubeThumb: state.youtubeThumb,
+        localUrl: state.localUrl,
+        title: state.title,
+        duration: state.duration,
+        isPlaying: state.isPlaying,
+        pausedAt: state.pausedAt,
+        updatedAtMs: Date.now(),
+        repeatMode: state.repeatMode,
+        playlist: ensureLockedTracksPresent(state.playlist),
+        currentQueueUid: state.currentQueueUid,
+        crackle: state.crackle,
+        theme: state.theme,
+        ...patch
+      };
+
+      if (patch.playlist) {
+        next.playlist = ensureLockedTracksPresent(patch.playlist);
+      }
+
+      applyState(next, true);
+
+      if (firebaseReady && currentUser) {
+        try {
+          await setDoc(getSharedDocRef(), {
+            ...next,
+            serverUpdatedAt: serverTimestamp()
+          }, { merge: true });
+        } catch (err) {
+          console.error("Sync write error:", err);
+        }
+      }
+    }
+
+    function applyState(data, isLocalAction = false) {
+      if (!data) return;
+
+      const prevSource = state.sourceType;
+      const prevYtId = state.youtubeId;
+      const prevLofi = state.lofiIndex;
+      const prevPlaying = state.isPlaying;
+
+      state.sourceType = data.sourceType || 'lofi';
+      state.lofiIndex = typeof data.lofiIndex === 'number' ? data.lofiIndex : 0;
+      state.youtubeId = data.youtubeId || '';
+      state.youtubeThumb = data.youtubeThumb || '';
+      state.localUrl = data.localUrl || '';
+      state.title = data.title || BUILTIN_TRACKS[0].title;
+      state.duration = data.duration || 180;
+      state.isPlaying = Boolean(data.isPlaying);
+      state.pausedAt = typeof data.pausedAt === 'number' ? data.pausedAt : 0;
+      state.updatedAtMs = typeof data.updatedAtMs === 'number' ? data.updatedAtMs : Date.now();
+      state.repeatMode = data.repeatMode === 'queue' ? 'queue' : 'one';
+      if (Array.isArray(data.playlist)) {
+        state.playlist = ensureLockedTracksPresent(data.playlist);
+      }
+      if (data.currentQueueUid) state.currentQueueUid = data.currentQueueUid;
+      if (typeof data.crackle === 'boolean') state.crackle = data.crackle;
+      if (data.theme) {
+        state.theme = data.theme;
+        applyThemeVariables(state.theme);
+      }
+
+      trackTitleEl.textContent = state.title;
+      if (state.youtubeThumb) {
+        labelCover.src = state.youtubeThumb;
+        labelCover.classList.remove('hidden');
+      } else {
+        labelCover.classList.add('hidden');
+      }
+
+      renderRepeatModeButton();
+
+      queueCountBadge.textContent = state.playlist.length;
+      queueCountBadge.classList.toggle('hidden', state.playlist.length === 0);
+      if (drawerMode === 'playlist' && !bottomDrawer.classList.contains('hidden')) {
+        renderPlaylistDrawer();
+      }
+
+      lofiEngine.crackleOn = state.crackle;
+      crackleLed.className = state.crackle
+        ? 'w-1.5 h-1.5 rounded-full shadow-[0_0_8px_var(--accent-color)]'
+        : 'w-1.5 h-1.5 rounded-full bg-white/25';
+      if (state.crackle) crackleLed.style.backgroundColor = 'var(--accent-color)';
+      else crackleLed.style.backgroundColor = '';
+
+      if (data.presence) {
+        const now = Date.now();
+        const others = Object.entries(data.presence).filter(([id, ts]) => id !== sessionId && (now - ts < 25000));
+        if (others.length > 0) {
+          syncDot.style.backgroundColor = '#34d399';
+          syncDot.style.boxShadow = '0 0 8px #34d399';
+          syncText.textContent = '함께 듣는 중';
+        } else {
+          syncDot.style.backgroundColor = 'var(--accent-color)';
+          syncDot.style.boxShadow = 'none';
+          syncText.textContent = '연결됨';
+        }
+      }
+
+      const trackChanged =
+        prevSource !== state.sourceType ||
+        prevYtId !== state.youtubeId ||
+        prevLofi !== state.lofiIndex;
+
+      syncPlaybackEngines(trackChanged || isLocalAction || prevPlaying !== state.isPlaying);
+    }
+
+    function syncPlaybackEngines(forceResync) {
+      const pos = Math.min(getActiveDuration(), getComputedPosition());
+
+      if (state.sourceType !== 'lofi') lofiEngine.stop();
+      if (state.sourceType !== 'local') localAudio.pause();
+      if (state.sourceType !== 'youtube' && ytReady && ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
+        ytPlayer.pauseVideo();
+      }
+
+      if (state.sourceType === 'lofi') {
+        if (state.isPlaying) {
+          if (forceResync || !lofiEngine.playing) {
+            lofiEngine.start(state.lofiIndex, pos);
+          }
+        } else {
+          lofiEngine.stop();
+        }
+      }
+
+      if (state.sourceType === 'youtube' && ytReady && ytPlayer && state.youtubeId) {
+        const loadedData = ytPlayer.getVideoData ? ytPlayer.getVideoData() : null;
+        const loadedId = loadedData ? loadedData.video_id : '';
+
+        if (loadedId !== state.youtubeId) {
+          if (state.isPlaying) {
+            ytPlayer.loadVideoById({ videoId: state.youtubeId, startSeconds: pos });
+          } else {
+            ytPlayer.cueVideoById({ videoId: state.youtubeId, startSeconds: pos });
+          }
+        } else {
+          const curYt = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
+          if (Math.abs(curYt - pos) > 1.5) {
+            ytPlayer.seekTo(pos, true);
+          }
+          if (state.isPlaying) {
+            ytPlayer.playVideo();
+          } else {
+            ytPlayer.pauseVideo();
+          }
+        }
+
+        if (state.isPlaying && state.crackle) {
+          lofiEngine.unlock();
+          lofiEngine.updateCrackle();
+        } else {
+          lofiEngine.stopCrackle();
+        }
+      }
+
+      if (state.sourceType === 'local' && state.localUrl) {
+        if (localAudio.src !== state.localUrl) {
+          localAudio.src = state.localUrl;
+        }
+        if (Math.abs(localAudio.currentTime - pos) > 1.2) {
+          try { localAudio.currentTime = pos; } catch (e) {}
+        }
+        if (state.isPlaying) {
+          localAudio.play().catch(() => {});
+        } else {
+          localAudio.pause();
+        }
+      }
+    }
+
+    localAudio.addEventListener('ended', () => {
+      if (state.isPlaying) handleTrackEnded();
+    });
+
+    async function connectSharedTurntable() {
+      const ref = getSharedDocRef();
+      try {
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          await setDoc(ref, {
+            sourceType: 'lofi',
+            lofiIndex: 0,
+            youtubeId: '',
+            youtubeThumb: '',
+            title: BUILTIN_TRACKS[0].title,
+            duration: BUILTIN_TRACKS[0].duration,
+            isPlaying: false,
+            pausedAt: 0,
+            updatedAtMs: Date.now(),
+            repeatMode: 'one',
+            playlist: buildDefaultLockedItems(),
+            currentQueueUid: 'lofi-0',
+            crackle: true,
+            theme: state.theme,
+            presence: { [sessionId]: Date.now() }
+          });
+        } else {
+          const existing = snap.data();
+          const mergedPlaylist = ensureLockedTracksPresent(existing.playlist);
+          await updateDoc(ref, {
+            playlist: mergedPlaylist,
+            [`presence.${sessionId}`]: Date.now()
+          });
+        }
+
+        onSnapshot(ref, (docSnap) => {
+          if (docSnap.exists()) {
+            applyState(docSnap.data(), false);
+          }
+        }, (err) => console.error(err));
+
+        setInterval(() => {
+          if (firebaseReady && currentUser) {
+            updateDoc(ref, { [`presence.${sessionId}`]: Date.now() }).catch(() => {});
+          }
+        }, 10000);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('searchInput');
+    const searchSubmitBtn = document.getElementById('searchSubmitBtn');
+    const bottomDrawer = document.getElementById('bottomDrawer');
+    const lofiPresetBtn = document.getElementById('lofiPresetBtn');
+    const localFileInput = document.getElementById('localFileInput');
+
+    let drawerMode = 'search';
+
+    function lockIconSvg() {
+      return `
+        <svg class="w-3 h-3 text-white/55" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="4" y="11" width="16" height="10" rx="2" />
+          <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke-linecap="round" />
+        </svg>
+      `;
+    }
+
+    function renderRepeatModeButton() {
+      if (state.repeatMode === 'one') {
+        repeatModeBtn.title = "한곡 반복 중 (클릭 시 다음곡 순차 재생으로 전환)";
+        repeatModeBtn.innerHTML = `
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 2l4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M3 11v-1a4 4 0 0 1 4-4h14" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M7 22l-4-4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M21 13v1a4 4 0 0 1-4 4H3" stroke-linecap="round" stroke-linejoin="round" />
+            <text x="10.2" y="14.5" font-size="7.5" fill="currentColor" stroke="none" font-weight="bold">1</text>
+          </svg>
+        `;
+      } else {
+        repeatModeBtn.title = "다음곡 순차 재생 중 (클릭 시 한곡 반복으로 전환)";
+        repeatModeBtn.innerHTML = `
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 3h5v5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4 20L21 3" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M21 16v5h-5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M15 15l6 6" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4 4l5 5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        `;
+      }
+    }
+
+    repeatModeBtn.addEventListener('click', () => {
+      const nextMode = state.repeatMode === 'one' ? 'queue' : 'one';
+      pushState({ repeatMode: nextMode });
+    });
+
+    function insertRightAfterCurrent(trackObj) {
+      const newItem = {
+        uid: crypto.randomUUID(),
+        locked: false,
+        ...trackObj
+      };
+      const nextList = [...state.playlist];
+      const curIdx = nextList.findIndex(t => t.uid === state.currentQueueUid);
+      if (curIdx >= 0) {
+        nextList.splice(curIdx + 1, 0, newItem);
+      } else {
+        nextList.push(newItem);
+      }
+      return { nextList, newItem };
+    }
+
+    function playQueueItem(item) {
+      if (!item) return;
+      lofiEngine.unlock();
+      pushState({
+        sourceType: item.sourceType,
+        lofiIndex: typeof item.lofiIndex === 'number' ? item.lofiIndex : 0,
+        youtubeId: item.youtubeId || '',
+        youtubeThumb: item.youtubeThumb || '',
+        localUrl: item.localUrl || '',
+        title: item.title,
+        duration: item.duration || 180,
+        currentQueueUid: item.uid,
+        isPlaying: true,
+        pausedAt: 0,
+        updatedAtMs: Date.now()
+      });
+    }
+
+    function renderPlaylistDrawer() {
+      drawerMode = 'playlist';
+      bottomDrawer.classList.remove('hidden');
+      bottomDrawer.innerHTML = '';
+
+      state.playlist.forEach((item, idx) => {
+        const isCurrent = item.uid === state.currentQueueUid;
+        const isLocked = Boolean(item.locked || (item.uid && item.uid.startsWith('lofi-')));
+
+        const row = document.createElement('div');
+        row.className = `flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl transition ${
+          isCurrent ? 'bg-white/[0.14] border border-white/15' : 'hover:bg-white/[0.07]'
+        }`;
+
+        const leftBtn = document.createElement('button');
+        leftBtn.type = 'button';
+        leftBtn.className = 'min-w-0 flex-1 flex items-center gap-2 text-left';
+        leftBtn.innerHTML = `
+          <span class="w-1.5 h-1.5 rounded-full shrink-0 ${isCurrent ? '' : 'opacity-0'}" style="background-color: var(--accent-color);"></span>
+          <div class="min-w-0 flex-1">
+            <div class="text-xs text-white/95 truncate">${item.title}</div>
+            ${item.subtitle ? `<div class="text-[10px] text-white/45 truncate">${item.subtitle}</div>` : ''}
+          </div>
+        `;
+        leftBtn.addEventListener('click', () => playQueueItem(item));
+
+        const actions = document.createElement('div');
+        actions.className = 'flex items-center gap-1 shrink-0';
+
+        const upBtn = document.createElement('button');
+        upBtn.type = 'button';
+        upBtn.title = '위로 이동';
+        upBtn.disabled = idx === 0;
+        upBtn.className = 'w-6 h-6 rounded-lg bg-white/[0.05] hover:bg-white/[0.15] disabled:opacity-25 text-white/80 flex items-center justify-center text-[10px]';
+        upBtn.textContent = '▲';
+        upBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (idx === 0) return;
+          const copy = [...state.playlist];
+          [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+          pushState({ playlist: copy });
+        });
+
+        const downBtn = document.createElement('button');
+        downBtn.type = 'button';
+        downBtn.title = '아래로 이동';
+        downBtn.disabled = idx === state.playlist.length - 1;
+        downBtn.className = 'w-6 h-6 rounded-lg bg-white/[0.05] hover:bg-white/[0.15] disabled:opacity-25 text-white/80 flex items-center justify-center text-[10px]';
+        downBtn.textContent = '▼';
+        downBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (idx >= state.playlist.length - 1) return;
+          const copy = [...state.playlist];
+          [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
+          pushState({ playlist: copy });
+        });
+
+        actions.append(upBtn, downBtn);
+
+        if (isLocked) {
+          const lockBadge = document.createElement('span');
+          lockBadge.title = '기본 탑재 트랙 (삭제 불가 고정)';
+          lockBadge.className = 'w-6 h-6 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center';
+          lockBadge.innerHTML = lockIconSvg();
+          actions.appendChild(lockBadge);
+        } else {
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.title = '삭제';
+          delBtn.className = 'w-6 h-6 rounded-lg bg-white/[0.05] hover:bg-rose-500/30 text-white/75 flex items-center justify-center text-xs';
+          delBtn.textContent = '✕';
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const copy = state.playlist.filter((_, i) => i !== idx);
+            pushState({ playlist: copy });
+          });
+          actions.appendChild(delBtn);
+        }
+
+        row.append(leftBtn, actions);
+        bottomDrawer.appendChild(row);
+      });
+    }
+
+    playlistToggleBtn.addEventListener('click', () => {
+      if (!bottomDrawer.classList.contains('hidden') && drawerMode === 'playlist') {
+        bottomDrawer.classList.add('hidden');
+      } else {
+        renderPlaylistDrawer();
+      }
+    });
+
+    const PIPED_INSTANCES = [
+      'https://pipedapi.kavin.rocks',
+      'https://pipedapi.tokhmi.xyz',
+      'https://api.piped.yt'
+    ];
+
+    async function handleSearchOrUrl() {
+      const query = searchInput.value.trim();
+      if (!query) {
+        if (!bottomDrawer.classList.contains('hidden')) {
+          bottomDrawer.classList.add('hidden');
+        } else {
+          renderPlaylistDrawer();
+        }
+        return;
+      }
+
+      drawerMode = 'search';
+      bottomDrawer.classList.remove('hidden');
+
+      const directId = extractYouTubeId(query);
+      if (directId) {
+        bottomDrawer.innerHTML = `<div class="py-3 text-center text-xs text-white/60">곡 정보 불러오는 중...</div>`;
+        let fetchedTitle = `YouTube (${directId})`;
+        try {
+          const oembed = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${directId}`);
+          const meta = await oembed.json();
+          if (meta && meta.title) fetchedTitle = meta.title;
+        } catch (e) {}
+
+        const trackCandidate = {
+          sourceType: 'youtube',
+          youtubeId: directId,
+          youtubeThumb: `https://i.ytimg.com/vi/${directId}/hqdefault.jpg`,
+          title: fetchedTitle,
+          duration: 210
+        };
+        renderSearchResultRows([trackCandidate]);
+        return;
+      }
+
+      bottomDrawer.innerHTML = `<div class="py-4 text-center text-xs text-white/60">검색 중...</div>`;
+
+      let items = null;
+      for (const base of PIPED_INSTANCES) {
+        try {
+          const res = await fetch(`${base}/search?q=${encodeURIComponent(query)}&filter=music_songs`);
+          if (!res.ok) continue;
+          const json = await res.json();
+          if (json && Array.isArray(json.items) && json.items.length > 0) {
+            items = json.items.slice(0, 8);
+            break;
+          }
+        } catch (e) {}
+      }
+
+      if (!items) {
+        bottomDrawer.innerHTML = `
+          <div class="p-3 text-center text-xs text-white/75 leading-relaxed">
+            검색 서버 응답이 지연되고 있습니다.<br/>
+            유튜브 영상 링크(URL)를 붙여넣으면 바로 추가·재생할 수 있습니다.
+          </div>
+        `;
+        return;
+      }
+
+      const candidates = items
+        .map(item => {
+          const vid = extractYouTubeId(item.url || '');
+          if (!vid) return null;
+          return {
+            sourceType: 'youtube',
+            youtubeId: vid,
+            youtubeThumb: item.thumbnail || `https://i.ytimg.com/vi/${vid}/default.jpg`,
+            title: item.title,
+            uploader: item.uploaderName || '',
+            duration: item.duration > 0 ? item.duration : 210
+          };
+        })
+        .filter(Boolean);
+
+      renderSearchResultRows(candidates);
+    }
+
+    function renderSearchResultRows(candidates) {
+      bottomDrawer.innerHTML = '';
+      candidates.forEach((cand) => {
+        const row = document.createElement('div');
+        row.className = 'w-full flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-white/[0.08] transition';
+
+        const playBtn = document.createElement('button');
+        playBtn.type = 'button';
+        playBtn.className = 'flex-1 flex items-center gap-2.5 min-w-0 text-left';
+        const durStr = cand.duration > 0 ? formatTime(cand.duration) : '';
+        playBtn.innerHTML = `
+          <img src="${cand.youtubeThumb}" alt="" class="w-9 h-9 rounded-lg object-cover shrink-0 bg-black/40" />
+          <div class="min-w-0 flex-1">
+            <div class="text-xs text-white/95 truncate">${cand.title}</div>
+            <div class="text-[10px] text-white/50 truncate">${cand.uploader || ''} ${durStr ? '• ' + durStr : ''}</div>
+          </div>
+        `;
+        playBtn.addEventListener('click', () => {
+          bottomDrawer.classList.add('hidden');
+          searchInput.value = '';
+          const { nextList, newItem } = insertRightAfterCurrent(cand);
+          pushState({
+            sourceType: cand.sourceType,
+            youtubeId: cand.youtubeId,
+            youtubeThumb: cand.youtubeThumb,
+            title: cand.title,
+            duration: cand.duration,
+            playlist: nextList,
+            currentQueueUid: newItem.uid,
+            isPlaying: true,
+            pausedAt: 0,
+            updatedAtMs: Date.now()
+          });
+        });
+
+        const addNextBtn = document.createElement('button');
+        addNextBtn.type = 'button';
+        addNextBtn.title = '현재 곡 다음에 예약';
+        addNextBtn.className = 'px-2.5 py-1.5 rounded-full bg-white/[0.1] hover:bg-white/[0.22] text-[11px] text-white/90 shrink-0 transition';
+        addNextBtn.textContent = '+ 다음곡';
+        addNextBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const { nextList } = insertRightAfterCurrent(cand);
+          pushState({ playlist: nextList });
+          addNextBtn.textContent = '✓ 예약됨';
+          setTimeout(() => { addNextBtn.textContent = '+ 다음곡'; }, 1200);
+        });
+
+        row.append(playBtn, addNextBtn);
+        bottomDrawer.appendChild(row);
+      });
+    }
+
+    function renderLofiPresets() {
+      drawerMode = 'lofi';
+      bottomDrawer.classList.remove('hidden');
+      bottomDrawer.innerHTML = '';
+
+      BUILTIN_TRACKS.forEach((tr, idx) => {
+        const isCurrent = state.sourceType === 'lofi' && state.lofiIndex === idx;
+        const row = document.createElement('div');
+        row.className = `w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl transition ${
+          isCurrent ? 'bg-white/[0.14] border border-white/15' : 'hover:bg-white/[0.08]'
+        }`;
+
+        const playBtn = document.createElement('button');
+        playBtn.type = 'button';
+        playBtn.className = 'flex-1 flex items-center justify-between gap-2 min-w-0 text-left pr-1';
+        playBtn.innerHTML = `
+          <div class="min-w-0 flex-1">
+            <div class="text-xs text-white/95 truncate">${tr.title}</div>
+            <div class="text-[10px] text-white/45 truncate">${tr.subtitle}</div>
+          </div>
+          <span class="text-[10px] text-white/45 tabular-nums shrink-0">${formatTime(tr.duration)}</span>
+        `;
+        playBtn.addEventListener('click', () => {
+          bottomDrawer.classList.add('hidden');
+          lofiEngine.unlock();
+          pushState({
+            sourceType: 'lofi',
+            lofiIndex: idx,
+            youtubeId: '',
+            youtubeThumb: '',
+            title: tr.title,
+            duration: tr.duration,
+            currentQueueUid: tr.id,
+            isPlaying: true,
+            pausedAt: 0,
+            updatedAtMs: Date.now()
+          });
+        });
+
+        const lockTag = document.createElement('span');
+        lockTag.title = '기본 ASMR · 로파이 트랙 (고정)';
+        lockTag.className = 'w-6 h-6 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center shrink-0';
+        lockTag.innerHTML = lockIconSvg();
+
+        row.append(playBtn, lockTag);
+        bottomDrawer.appendChild(row);
+      });
+    }
+
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleSearchOrUrl();
+    });
+
+    searchSubmitBtn.addEventListener('click', handleSearchOrUrl);
+
+    lofiPresetBtn.addEventListener('click', () => {
+      lofiEngine.unlock();
+      if (!bottomDrawer.classList.contains('hidden') && drawerMode === 'lofi') {
+        bottomDrawer.classList.add('hidden');
+      } else {
+        renderLofiPresets();
+      }
+    });
+
+    crackleBtn.addEventListener('click', () => {
+      lofiEngine.unlock();
+      pushState({ crackle: !state.crackle });
+    });
+
+    localFileInput.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const objUrl = URL.createObjectURL(file);
+      const cleanName = file.name.replace(/\.[^/.]+$/, '');
+      localAudio.src = objUrl;
+      const cand = {
+        sourceType: 'local',
+        localUrl: objUrl,
+        title: cleanName,
+        duration: 180
+      };
+      const { nextList, newItem } = insertRightAfterCurrent(cand);
+      pushState({
+        sourceType: 'local',
+        localUrl: objUrl,
+        youtubeId: '',
+        youtubeThumb: '',
+        title: cleanName,
+        playlist: nextList,
+        currentQueueUid: newItem.uid,
+        isPlaying: true,
+        pausedAt: 0,
+        updatedAtMs: Date.now()
+      });
+    });
+
+    const themeOpenBtn = document.getElementById('themeOpenBtn');
+    const themeCloseBtn = document.getElementById('themeCloseBtn');
+    const themeModalBackdrop = document.getElementById('themeModalBackdrop');
+    const moodPresetsGrid = document.getElementById('moodPresetsGrid');
+
+    MOOD_PRESETS.forEach((preset) => {
+      const swatch = document.createElement('button');
+      swatch.type = 'button';
+      swatch.title = preset.name;
+      swatch.className = 'aspect-square rounded-2xl border border-white/25 shadow-md flex items-center justify-center transition hover:scale-105';
+      swatch.style.background = `radial-gradient(circle at 30% 30%, ${preset.label}, ${preset.bg})`;
+      swatch.innerHTML = `<span class="w-3 h-3 rounded-full border border-white/40" style="background:${preset.vinyl}"></span>`;
+      swatch.addEventListener('click', () => {
+        pushState({ theme: { ...preset } });
+      });
+      moodPresetsGrid.appendChild(swatch);
+    });
+
+    function bindColorPicker(inputId, key) {
+      const el = document.getElementById(inputId);
+      el.addEventListener('input', (e) => {
+        const updated = { ...state.theme, [key]: e.target.value };
+        state.theme = updated;
+        applyThemeVariables(updated);
+      });
+      el.addEventListener('change', (e) => {
+        const updated = { ...state.theme, [key]: e.target.value };
+        pushState({ theme: updated });
+      });
+    }
+
+    bindColorPicker('pickerBg', 'bg');
+    bindColorPicker('pickerVinyl', 'vinyl');
+    bindColorPicker('pickerLabel', 'label');
+    bindColorPicker('pickerArm', 'arm');
+    bindColorPicker('pickerHead', 'head');
+
+    themeOpenBtn.addEventListener('click', () => {
+      themeModalBackdrop.classList.remove('hidden');
+    });
+
+    themeCloseBtn.addEventListener('click', () => {
+      themeModalBackdrop.classList.add('hidden');
+    });
+
+    themeModalBackdrop.addEventListener('pointerdown', (e) => {
+      if (e.target === themeModalBackdrop) {
+        themeModalBackdrop.classList.add('hidden');
+      }
+    });
+
+    document.addEventListener('pointerdown', (e) => {
+      if (!bottomDrawer.classList.contains('hidden') &&
+          !bottomDrawer.contains(e.target) &&
+          !searchForm.contains(e.target) &&
+          !searchSubmitBtn.contains(e.target) &&
+          !lofiPresetBtn.contains(e.target) &&
+          !playlistToggleBtn.contains(e.target)) {
+        bottomDrawer.classList.add('hidden');
+      }
+    });
+
+    applyThemeVariables(state.theme);
+    renderRepeatModeButton();
+    queueCountBadge.textContent = state.playlist.length;
+    queueCountBadge.classList.remove('hidden');
+    initFirebase();
+  </script>
+</body>
+</html>
