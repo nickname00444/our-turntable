@@ -138,11 +138,17 @@
 
   <!-- Top Bar -->
   <header class="w-full max-w-md flex items-center justify-between z-30 shrink-0">
-    <div class="w-8"></div>
+    <!-- 순수 잉여 클리커 버튼 -->
+    <button id="clickerBtn" type="button" class="px-3 py-1 rounded-full bg-white/[0.08] hover:bg-white/[0.16] border border-white/[0.15] text-[11px] text-white/90 flex items-center gap-1.5 transition active:scale-95 shadow-md">
+      <span>🎧 오디오 켜기</span>
+      <span id="clickerCount" class="px-1.5 py-0.2 rounded-full bg-black/30 text-[10px]">0</span>
+    </button>
+
     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.08]">
       <span id="syncDot" class="w-2 h-2 rounded-full transition-colors duration-500" style="background-color: var(--accent-color);"></span>
       <span id="syncText" class="text-[11px] tracking-wider text-white/75 font-light">연결 중</span>
     </div>
+
     <button id="themeOpenBtn" type="button" title="색상 설정" class="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] border border-white/[0.1] text-white/80 flex items-center justify-center transition">
       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
         <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
@@ -629,6 +635,17 @@
     }
 
     const audioEngine = new WebAudioEngine();
+
+    // 순수 잉여 클리커 로직 (새로고침 시 0으로 초기화, 소리 안 남)
+    let clickCount = 0;
+    const clickerBtn = document.getElementById('clickerBtn');
+    const clickerCount = document.getElementById('clickerCount');
+
+    clickerBtn.addEventListener('click', () => {
+      audioEngine.unlock(); // 브라우저 오디오 권한만 깨워줌
+      clickCount++;
+      clickerCount.textContent = clickCount;
+    });
 
     let ytPlayer = null;
     let ytReady = false;
