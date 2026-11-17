@@ -138,7 +138,6 @@
 
   <!-- Top Bar -->
   <header class="w-full max-w-md flex items-center justify-between z-30 shrink-0">
-    <!-- 순수 잉여 클리커 버튼 -->
     <button id="clickerBtn" type="button" class="px-3 py-1 rounded-full bg-white/[0.08] hover:bg-white/[0.16] border border-white/[0.15] text-[11px] text-white/90 flex items-center gap-1.5 transition active:scale-95 shadow-md">
       <span>🎧 오디오 켜기</span>
       <span id="clickerCount" class="px-1.5 py-0.2 rounded-full bg-black/30 text-[10px]">0</span>
@@ -308,7 +307,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import {
       getFirestore,
       doc,
@@ -329,7 +328,8 @@
       appId: "1:175737875645:web:2507bf910f9c6712ac5bd4"
     };
 
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'couple-vinyl-app';
+    // [수정] appId를 고정값으로 강제 지정하여 경로 불일치 원천 차단
+    const appId = 'couple-vinyl-app';
     const SHARED_ROOM_ID = 'our-shared-turntable';
     const sessionId = crypto.randomUUID();
 
@@ -343,14 +343,12 @@
         const auth = getAuth(app);
         db = getFirestore(app);
 
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          const cred = await signInWithCustomToken(auth, __initial_auth_token);
-          currentUser = cred.user;
-        } else {
-          const cred = await signInAnonymously(auth);
-          currentUser = cred.user;
-        }
+        // 익명 로그인 확실히 처리
+        const cred = await signInAnonymously(auth);
+        currentUser = cred.user;
         firebaseReady = true;
+        
+        document.getElementById('syncText').textContent = '연결됨';
         connectSharedTurntable();
       } catch (err) {
         console.warn("Offline/Local mode:", err);
@@ -636,13 +634,13 @@
 
     const audioEngine = new WebAudioEngine();
 
-    // 순수 잉여 클리커 로직 (새로고침 시 0으로 초기화, 소리 안 남)
+    // 순수 잉여 클리커 로직
     let clickCount = 0;
     const clickerBtn = document.getElementById('clickerBtn');
     const clickerCount = document.getElementById('clickerCount');
 
     clickerBtn.addEventListener('click', () => {
-      audioEngine.unlock(); // 브라우저 오디오 권한만 깨워줌
+      audioEngine.unlock();
       clickCount++;
       clickerCount.textContent = clickCount;
     });
@@ -836,7 +834,7 @@
       if (firebaseReady && currentUser) {
         try {
           await setDoc(getSharedDocRef(), { ...next, serverUpdatedAt: serverTimestamp() }, { merge: true });
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error("Firestore push error:", err); }
       }
     }
 
@@ -967,14 +965,14 @@
 
         onSnapshot(ref, (docSnap) => {
           if (docSnap.exists()) { applyState(docSnap.data(), false); }
-        }, (err) => console.error(err));
+        }, (err) => console.error("Firestore snapshot error:", err));
 
         setInterval(() => {
           if (firebaseReady && currentUser) {
             updateDoc(ref, { [`presence.${sessionId}`]: Date.now() }).catch(() => {});
           }
         }, 10000);
-      } catch (e) { console.error(e); }
+      } catch (e) { console.error("Shared turntable connection error:", e); }
     }
 
     const searchForm = document.getElementById('searchForm');
